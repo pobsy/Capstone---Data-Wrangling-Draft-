@@ -62,7 +62,8 @@ str(lc)
 After a quick investigation, can see that the data set has been reduced from 108 variables to 51 variables.
 
 
-## Unique() columns - Investigate and where necessary delete, the remaining columns
+# Step 3 - Unique() columns 
+## Investigate and where necessary delete, the remaining columns
 Title and purpose are similar columns that describe the same thing - the reason for the loan. Hence, I only need one of these. The "purpose" column looks to be the most appropriate as it includes more generic reasons for the loan rather than the specifics as with "title". This will allow me to group these reasons into categories if needed.
 
 
@@ -78,13 +79,13 @@ lc[, "title"] <- NULL
 ```
 
 
-####Bad code **how do I print only unique values with length of less than 2? (as the rest of the columns will be useful and hence will not be deleting)**
+#### Bad code **how do I print only unique values with length of less than 2? (as the rest of the columns will be useful and hence will not be deleting)**
 **how do I get the count of each unique value i.e. for the x column in the 200 sample "y" appears three times and "n" appears 197 times.**
  breakdown <- lc_new[, unique_values == TRUE]
  print(breakdown) 
 **kind of worked but produced the first 10 obs in the column of each one that was true. I just want the summary of what the unique values are along with the frequency.**
 -----------------------------------------------------------------
-**potential solution:**
+#### **potential solution:**
 
 First - display all the columns with the number of unique values in each.
 ```{r}
@@ -103,7 +104,7 @@ print(unique_values)
 ```
 Can then investigate each column separately to determine if the breakdown of unique values warrants the columns useful enough to keep. 
 
-###Delete columns with just 1 unique value. 
+### Delete columns with just 1 unique value. 
 Can straight away delete any variables with just one unique value - this will not add any value to our data. 
 
 ```{r}
@@ -134,7 +135,7 @@ Hence, "grade" is clearly a useful column as the unique variables are well sprea
 Similarly investigated "home_ownership", "pub_rec" and "pub_rec_bankruptcies".
 
 
-# Step 3 - Binary Classification
+# Step 4 - Binary Classification
 ## Loan Status
 3 variables in this column: "Fully paid", "Current", "Charged off". "Charged off" is the only indciation of a default/bad loan while the other 2 are good. We can set up a binary to see if a loan status is good or bad.
 
@@ -146,7 +147,7 @@ Can also use the code:
 lc_new$is_bad <- ifelse(lc_new6$loan_status %in% "Charged Off", 1, ifelse(lc_new6$loan_status == "", NA, 0))
 ```
 
-# Step 4 - Converting Ordinal values to integers
+# Step 5 - Converting Ordinal values to integers
 
 ## Emp_length
 Start off with the "emp_length" column. Firstly, want to remove all the text i.e. "year(s)" 
