@@ -134,8 +134,8 @@ Hence, "grade" is clearly a useful column as the unique variables are well sprea
 Similarly investigated "home_ownership", "pub_rec" and "pub_rec_bankruptcies".
 
 
-#Step 3 - Binary Classification
-##Loan Status
+# Step 3 - Binary Classification
+## Loan Status
 3 variables in this column: "Fully paid", "Current", "Charged off". "Charged off" is the only indciation of a default/bad loan while the other 2 are good. We can set up a binary to see if a loan status is good or bad.
 
 ```{r}
@@ -146,8 +146,9 @@ Can also use the code:
 lc_new$is_bad <- ifelse(lc_new6$loan_status %in% "Charged Off", 1, ifelse(lc_new6$loan_status == "", NA, 0))
 ```
 
-#Step 4 - Converting Ordinal values to integers
-##Emp_length
+# Step 4 - Converting Ordinal values to integers
+
+## Emp_length
 Start off with the "emp_length" column. Firstly, want to remove all the text i.e. "year(s)" 
 ```{r}
 lc_new$emp_length <- gsub("[[:alpha:]]","", lc_new$emp_length)
