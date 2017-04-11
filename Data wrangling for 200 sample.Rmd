@@ -1,0 +1,165 @@
+---
+title: "Capstone Data Wrangling"
+author: "Paddy"
+date: "9 April 2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Data Wrangling (Draft 1)
+
+The purpose of this exercise is to do the inital draft of data wrangling for my Capstone project. 
+I am using a sample size of 200 observations to speed up the process. Once I am satisfied with the code I will then apply it to the full data set.
+
+# Step 1 - import the relevent libraries and the data set and reduce the sample size to 200.
+
+```{r}
+library(tidyr)
+library(dplyr)
+library(ggplot2)
+library(ggthemes)
+library(readr)
+LC_data <- read_csv("~/Springboard/Capstone project/LC data.csv")
+View(LC_data)
+lc <- LC_data[1:200]
+
+```
+# Step 2 - Review the data. Begin with a summary to get an idea of what data is available. Remove any obvious columns that will not be required or columns with no data.
+
+Set the width and group the columns in smaller subsets so that all the data can be reviewed easier.
+
+```{r}
+str(lc)
+options(dplyr.width = Inf)
+lc[, 1:20]
+lc <- select(lc, -issue_d, -url, -desc, - funded_amnt, -funded_amnt_inv)
+
+```
+"verifcation_status" and "pymnt_plan" need further investigating. "Verification_status" looks like it won't add much value to the analysis so that will be deleted. "pyment_plan" is all "n" for this sample so this will also be deleted. 
+
+```{r}
+print(lc$verification_status)
+lc[, "verification_status"] <- NULL
+print(lc$pymnt_plan)
+lc[, "pymnt_plan"] <- NULL
+
+```
+##Remove NA columns
+Before moving onto next 20 columns, it is obvious that alot of columns have a considerable amount of NA data. Want to remove fields that are mostly NA as they will not be useful. Doing this now will save time going through each column in groups and deleting one by one. Eliminate columns which are made up of more than 80% na values.
+
+```{r}
+missing_values <- sapply(lc, function(x) {
+  percentage <- sum(is.na(x))/length(x) 
+  percentage < 0.2
+  })
+lc_new <- lc[,missing_values == TRUE]
+str(lc_new)
+str(lc)
+```
+After a quick investigation, can see that the data set has been reduced from 108 variables to 51 variables.
+
+
+## Unique() columns - Investigate and where necessary delete, the remaining columns
+Title and purpose are similar columns that describe the same thing - the reason for the loan. Hence, I only need one of these. The "purpose" column looks to be the most appropriate as it includes more generic reasons for the loan rather than the specifics as with "title". This will allow me to group these reasons into categories if needed.
+
+
+```{r}
+unique_values <- sapply(lc_new, function(x){
+    length(unique(x))
+    })
+print(unique_values)
+```
+Comparing both columns, can see that purpose has 12 variables while title has 137. Hence, it will be easier working with the purpose column. Title column can be deleted. 
+```{r}
+lc[, "title"] <- NULL
+```
+
+
+####Bad code **how do I print only unique values with length of less than 2? (as the rest of the columns will be useful and hence will not be deleting)**
+**how do I get the count of each unique value i.e. for the x column in the 200 sample "y" appears three times and "n" appears 197 times.**
+ breakdown <- lc_new[, unique_values == TRUE]
+ print(breakdown) 
+**kind of worked but produced the first 10 obs in the column of each one that was true. I just want the summary of what the unique values are along with the frequency.**
+-----------------------------------------------------------------
+**potential solution:**
+
+First - display all the columns with the number of unique values in each.
+```{r}
+unique_values <- sapply(lc_new, function(x){
+    length(unique(x))
+})
+print(unique_values)
+```
+**Can also specify a number i.e. what columns have less than 6 unique values. The following code displays the list similar to the output of the code above except it give True or False depending on if the condition is met.**
+
+```{r}
+unique_values <- sapply(lc_new, function(x){
+    count <- length(unique(x))
+    count < 6 })
+print(unique_values)
+```
+Can then investigate each column separately to determine if the breakdown of unique values warrants the columns useful enough to keep. 
+
+###Delete columns with just 1 unique value. 
+Can straight away delete any variables with just one unique value - this will not add any value to our data. 
+
+```{r}
+ unique_values <- sapply(lc_new, function(x){
+ size <- length(unique(x))
+ size > 1 })
+ lc_new <- lc_new[, unique_values == FALSE]
+ print(lc_new)
+```
+
+This leaves us with 43 columns. 
+Can then begin to investigate the remaining columns with few unique columns (<6). Example below for the grade column. 
+```{r}
+aggregate(data.frame(count = lc_new$grade), list(value = lc_new$grade), length)
+```
+
+The output of this code shows the following:
+                                 value count
+                              1     A    36
+                              2     B    81
+                              3     C    41
+                              4     D    26
+                              5     E    10
+                              6     F     6
+                              
+Hence, "grade" is clearly a useful column as the unique variables are well spread across the dataset i.e. no one grade significantly dominates.
+
+Similarly investigated "home_ownership", "pub_rec" and "pub_rec_bankruptcies".
+
+
+#Step 3 - Binary Classification
+##Loan Status
+3 variables in this column: "Fully paid", "Current", "Charged off". "Charged off" is the only indciation of a default/bad loan while the other 2 are good. We can set up a binary to see if a loan status is good or bad.
+
+```{r}
+lc_new <- lc_new %>% mutate(loan_status_good = ifelse(loan_status =="Charged Off", 0, 1))
+```
+Can also use the code:
+```{r}
+lc_new$is_bad <- ifelse(lc_new6$loan_status %in% "Charged Off", 1, ifelse(lc_new6$loan_status == "", NA, 0))
+```
+
+#Step 4 - Converting Ordinal values to integers
+##Emp_length
+Start off with the "emp_length" column. Firstly, want to remove all the text i.e. "year(s)" 
+```{r}
+lc_new$emp_length <- gsub("[[:alpha:]]","", lc_new$emp_length)
+```
+Then we want to remove the "+" symbol
+
+```{r}
+lc_new$emp_length <- gsub("[+]", "", lc_new$emp_length)
+```
+Assign values at <1 year to 0.
+```{r}
+
+```
+
+
