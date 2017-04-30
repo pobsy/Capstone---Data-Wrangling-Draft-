@@ -145,6 +145,19 @@ lc_new <- lc_new %>% mutate(loan_status_good = ifelse(loan_status =="Charged Off
 Can also use the code:
 ```{r}
 lc_new$is_bad <- ifelse(lc_new6$loan_status %in% "Charged Off", 1, ifelse(lc_new6$loan_status == "", NA, 0))
+
+
+```
+##Instead of Binary Classification - lets use One Hot Encoding
+Use OHE on all variables with <30 unique values (as a rule of thumb). No need to apply this code to variables with 2 unique values as they are already essentially formatted. 
+
+```{r}
+ ohe_feats = c('term', 'grade', 'sub_grade', 'emp_length', 'home_ownership', 'loan_status', 'delinq_2yrs', 'inq_last_6mths', 'pub_rec', 'policy_code', 'application_type', 'pub_rec_bankruptcies')
+ for(f in ohe_feats) {
+      df_dummy1 = acm.disjonctif(lc11[f])
+      lc11[f] = NULL
+      lc11 = cbind(lc11, df_dummy1)
+ }
 ```
 
 # Step 5 - Converting Ordinal values to integers
@@ -161,6 +174,30 @@ lc_new$emp_length <- gsub("[+]", "", lc_new$emp_length)
 ```
 Assign values at <1 year to 0.
 ```{r}
+
+```
+#Step 6 - normalising the data
+There are 2 ways to do this - normalizing or standardizing.
+```{r}
+ normalize <- function(x){}
+ normalize <- function(x){
+ return((x - min(x)/(max(x) - min(x))))
+ }
+ dfnorm <- data.frame(lapply(lc11$fico_range_high, normalize))
+ 
+ 
+ scale(lc11$fico_range_low, center = TRUE, scale = TRUE)
+```
+****how do I join this to an exisiting dataframe or replace an existing column  with it in an existing dataframe.
+cbind() and replace()
+
+I've decided to go with standardizing.The following commands create a new standardized column for the fico range high, then add it to the original data frame and finally display all columns in this data frame.
+```{r}
+ficonew <- scale(lc11$fico_range_high, center = TRUE, scale = TRUE)
+
+lcnew <- cbind(lc, ficonew)
+
+str(lcnew, list.len=ncol(df))
 
 ```
 
